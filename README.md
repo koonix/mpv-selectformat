@@ -3,6 +3,8 @@
 selectformat is an mpv script that allows you to select the
 youtube-dl format of the video on the fly.
 
+Based on the unmaintained [mpv-youtube-quality](https://github.com/jgreco/mpv-youtube-quality).
+
 ![Screenshot](screenshot.jpg)
 
 ## Features
