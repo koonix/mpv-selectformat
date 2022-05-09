@@ -9,10 +9,10 @@ Based on the unmaintained [mpv-youtube-quality](https://github.com/jgreco/mpv-yo
 
 ## Features
 
-- More useful info about the formats are displayed compared to [mpv-youtube-quality](https://github.com/jgreco/mpv-youtube-quality)
-- The formats are properly sorted based on resolution, FPS, dynamic range, codec, bitrate, sample rate and protocol
+- Formats are properly sorted based on codec, protocol, etc.
 - Formats are fetched asynchronously as soon as a network video starts
 - The initially loaded format is pre-selected in the menu
+- More useful info about the formats are displayed compared to mpv-youtube-quality
 
 ## TODO
 
