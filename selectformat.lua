@@ -11,7 +11,6 @@ local opts = {
     prefix_norm_sel  = "○ ",
     prefix_norm      = ". ",
     prefix_header    = "- ",
-    menu_timeout_sec = 30,
     menu_padding_x   = 5,
     menu_padding_y   = 5,
     ass_style = "{\\fnmonospace\\fs8}",
@@ -32,6 +31,7 @@ local keys = {
 local data = {}
 local url = ""
 local ytdl_path = ""
+local is_menu_shown = false
 
 -- fetch the formats using youtube-dl asyncronously and hand them to formats_save()
 function formats_fetch()
@@ -71,7 +71,7 @@ function menu_toggle()
         mp.osd_message("Couldn't find a youtube-dl executable.")
         return
     end
-    if is_menu_active() then menu_hide() else menu_show() end
+    if is_menu_shown then menu_hide() else menu_show() end
 end
 
 function menu_show()
@@ -82,17 +82,13 @@ function menu_show()
         mp.osd_message("No formats available.")
         return
     end
+    is_menu_shown = true
     menu_init_vars()
     menu_draw()
     menu_keys_bind()
 end
 
 function menu_init_vars()
-    if data[url].timer == nil then
-        data[url].timer = mp.add_periodic_timer(opts.menu_timeout_sec, menu_hide)
-    else
-        data[url].timer:resume()
-    end
     if data[url].cursor_pos == nil or data[url].selected_pos == nil then
         data[url].cursor_pos = 1
         data[url].selected_pos = 0
@@ -113,11 +109,11 @@ function menu_init_cursor_pos()
 end
 
 function menu_hide()
-    if not update_url() then return end
-    if not is_menu_active() then return end
-    mp.set_osd_ass(0, 0, "")
-    menu_keys_unbind()
-    menu_timer_stop()
+    if is_menu_shown then
+        is_menu_shown = false
+        mp.set_osd_ass(0, 0, "")
+        menu_keys_unbind()
+    end
 end
 
 function menu_draw()
@@ -173,7 +169,6 @@ function menu_cursor_move(i)
             data[url].cursor_pos = #data[url].formats
         end
     end
-    menu_timer_restart()
     menu_draw()
 end
 
@@ -183,19 +178,6 @@ function menu_select()
     data[url].selected_pos = sel
     mp.set_property("ytdl-format", data[url].formats[sel].ytdl_format)
     reload_resume()
-end
-
-function menu_timer_restart()
-    data[url].timer:kill()
-    data[url].timer:resume()
-end
-
-function menu_timer_stop()
-    data[url].timer:kill()
-end
-
-function is_menu_active()
-    return data[url] and data[url].timer and data[url].timer:is_enabled() or false
 end
 
 function is_fetch_in_progress()
