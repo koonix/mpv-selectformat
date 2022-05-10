@@ -1,18 +1,22 @@
 -- author: Ehsan Ghorbannezhad <ehsan@disroot.org>
 -- select the video's youtube-dl format via a menu.
 
+local msg     = require "mp.msg"
+local utils   = require "mp.utils"
+local options = require "mp.options"
+local assdraw = require "mp.assdraw"
+
 local opts = {
-    youtubedl_path = "yt-dlp",
-    prefix_cursor      = "● ",
-    prefix_norm_sel    = "○ ",
-    prefix_norm        = ". ",
-    prefix_header      = "- ",
+    prefix_cursor    = "● ",
+    prefix_norm_sel  = "○ ",
+    prefix_norm      = ". ",
+    prefix_header    = "- ",
     menu_timeout_sec = 30,
-    menu_padding_x = 5,
-    menu_padding_y = 5,
+    menu_padding_x   = 5,
+    menu_padding_y   = 5,
     ass_style = "{\\fnmonospace\\fs8}",
 }
-(require "mp.options").read_options(opts)
+options.read_options(opts)
 
 local keys = {
     { {"UP",    "k"},      "up",     function() menu_cursor_move(-1) end, {repeatable=true} },
@@ -25,15 +29,15 @@ local keys = {
     { {"ENTER"},           "select", function() menu_select() end },
 }
 
-local utils = require "mp.utils"
-local assdraw = require "mp.assdraw"
 local data = {}
 local url = ""
+local ytdl_path = ""
 
 -- fetch the formats using youtube-dl asyncronously and hand them to formats_save()
 function formats_fetch()
     if not update_url() then return end
     if data[url] then return end
+    if not update_ytdl_path() then return end
     data[url] = "fetching"
     execasync(function(a, b, c) formats_save(url, a, b, c) end, get_ytdl_cmdline())
 end
@@ -60,7 +64,13 @@ end
 
 -- show/hide the menu
 function menu_toggle()
-    if not update_url() then return end
+    if not update_url() then
+        mp.osd_message("Formats are only fetched for internet videos.")
+        return
+    elseif not update_ytdl_path() then
+        mp.osd_message("Couldn't find a youtube-dl executable.")
+        return
+    end
     if is_menu_active() then menu_hide() else menu_show() end
 end
 
@@ -340,7 +350,7 @@ function sanitize_format(fmt)
 end
 
 function get_ytdl_cmdline()
-    local args = { opts.youtubedl_path, "--no-playlist", "-j",
+    local args = { ytdl_path, "--no-playlist", "-j",
         table.unpack(get_ytdl_format_args()) }
     table.insert(args, "--")
     table.insert(args, (url:gsub("^ytdl://", "")))
@@ -418,12 +428,6 @@ function is_network_stream(path)
     return false
 end
 
--- asynchronously execute shell commands using mpv's subprocess command
-function execasync(fn, args)
-    mp.command_native_async({name = "subprocess", args = args,
-        capture_stdout = true, capture_stderr = true}, fn)
-end
-
 -- this function is a modified version of mpv-reload's reload_resume()
 -- https://github.com/4e6/mpv-reload, commit c1219b6
 function reload_resume()
@@ -447,6 +451,67 @@ function reload_resume()
     for i = plpos + 1, plcount - 1 do
         mp.commandv("loadfile", playlist[i], "append")
     end
+end
+
+-- search for yt-dlp or youtube-dl executable's path and update the ytdl-path variable
+function update_ytdl_path()
+    if ytdl_path == nil then
+        return false
+    elseif not isempty(ytdl_path) then
+        return true
+    end
+    local paths = {}
+    paths = get_ytdl_hook_opt_paths() or {"yt-dlp", "yt-dlp_x86", "youtube-dl"}
+    for _, p in pairs(paths) do
+        p = find_executable_path(p)
+        if p then
+            ytdl_path = p
+            return true
+        end
+    end
+    msg.warn("couldn't find a youtube-dl executable")
+    ytdl_path = nil
+    return false
+end
+
+-- search in config dirs and system's path for the given youtube-dl executable name
+function find_executable_path(name)
+    local suffix = is_os_windows() and ".exe" or ""
+    local cname = mp.find_config_file(name..suffix)
+    if cname then
+        return cname
+    elseif exec{ name, "--version" }.error_string ~= "init" then
+        return name
+    end
+    return nil
+end
+
+-- get the paths specified in ytdl_hook's ytdl_path script-opt
+-- if there aren't any paths specified there, return false
+function get_ytdl_hook_opt_paths()
+    local paths = {}
+    local sep = is_os_windows() and ";" or ":"
+    local hook_opts = { ytdl_path = "" }
+    options.read_options(hook_opts, "ytdl_hook")
+    for p in hook_opts.ytdl_path:gmatch("[^"..sep.."]+") do
+        table.insert(paths, p)
+    end
+    return #paths > 0 and paths or false
+end
+
+-- asynchronously execute shell commands using mpv's subprocess command
+function execasync(fn, args)
+    mp.command_native_async({name = "subprocess", args = args,
+        capture_stdout = true, capture_stderr = true}, fn)
+end
+
+function exec(args)
+    return mp.command_native{name = "subprocess", args = args,
+        capture_stdout = true, capture_stderr = true}
+end
+
+function is_os_windows()
+    return package.config:sub(1,1) == "\\"
 end
 
 function isempty(var)
