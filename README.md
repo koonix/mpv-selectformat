@@ -7,6 +7,12 @@ Based on the unmaintained [mpv-youtube-quality](https://github.com/jgreco/mpv-yo
 
 ![Screenshot](screenshot.jpg)
 
+## Install
+
+1. Download and copy `selectformat.lua` to your mpv's [scripts folder](https://mpv.io/manual/stable/#script-location)
+2. Add a binding to your mpv's [input.conf file](https://mpv.io/manual/stable/#input-conf) (selectformat doesn't add any bindings itself):
+`ctrl+f script-binding selectformat/menu`
+
 ## Features
 
 - Formats are properly sorted based on codec, protocol, etc.
