@@ -1,6 +1,11 @@
 -- author: Ehsan Ghorbannezhad <ehsan@disroot.org>
 -- select the video's youtube-dl format via a menu.
 
+-- TODO: fix all the (width or "sth").. stuff
+-- TODO: make cursor pos be bound to a format_id, not menu position
+-- TODO: if fold contains only one format, do not unfold
+-- TODO: refactor everything
+
 local msg     = require "mp.msg"
 local utils   = require "mp.utils"
 local options = require "mp.options"
@@ -11,6 +16,7 @@ local opts = {
     prefix_norm_sel  = "○ ",
     prefix_norm      = ". ",
     prefix_header    = "- ",
+    prefix_indent    = "> ",
     menu_padding_x   = 5,
     menu_padding_y   = 5,
     ass_style = "{\\fnmonospace\\fs8}",
@@ -24,6 +30,8 @@ local keys = {
     { {"PGDWN", "ctrl+d"}, "pgdwn",  function() menu_cursor_move( 5) end, {repeatable=true} },
     { {"HOME",  "g"},      "top",    function() menu_cursor_move("top")    end },
     { {"END",   "G"},      "bottom", function() menu_cursor_move("bottom") end },
+    { {"RIGHT", "l"},      "unfold", function() menu_unfold() end },
+    { {"LEFT",  "h"},      "fold",   function() menu_fold()   end },
     { {"ESC",   "q"},      "quit",   function() menu_hide()   end },
     { {"ENTER"},           "select", function() menu_select() end },
 }
@@ -60,6 +68,24 @@ function formats_save(url, success, result, error)
     end
     if no_formats_available() then return end
     table.sort(data[url].formats, format_sort_fn)
+    data[url].formats_unfolded = data[url].formats
+    formats_fold()
+end
+
+function formats_fold(width, height)
+    data[url].formats = {}
+    local enummed_res = {}
+    local unfold_res = (width or "null").."x"..(height or "null")
+    for _, fmt in ipairs(data[url].formats_unfolded) do
+        local res = (fmt.width or "").."x"..(fmt.height or "")
+        if res == "x" then res = fmt.format_id end
+        fmt.is_unfolded = false
+        if not enummed_res[res] or res == unfold_res then
+            enummed_res[res] = true
+            if res == unfold_res then fmt.is_unfolded = true end
+            table.insert(data[url].formats, fmt)
+        end
+    end
 end
 
 -- show/hide the menu
@@ -96,12 +122,14 @@ function menu_init_vars()
     end
 end
 
+-- put the cursor on the initially loaded format.
+-- see the comments of the get_ytdl_format_args() function for more info.
 function menu_init_cursor_pos()
-    local f = data[url].initial_format_id
-    if isempty(f) or not isstr(f) then return end
-    f = f:match("^(.*)%+") or f
+    local id = data[url].initial_format_id
+    if isempty(id) or not isstr(id) then return end
+    id = id:match("^(.*)%+") or id
     for idx, fmt in ipairs(data[url].formats) do
-        if fmt.format_id == f then
+        if fmt.format_id == id then
             data[url].cursor_pos = idx
             data[url].selected_pos = idx
         end
@@ -123,6 +151,7 @@ function menu_draw()
     ass:append(opts.prefix_header..get_menu_header().."\\N")
     for idx, fmt in ipairs(data[url].formats) do
         ass:append(menu_get_prefix(idx))
+        ass:append(menu_get_indent_marker(idx))
         ass:append(fmt.label.."\\N")
     end
     mp.set_osd_ass(0, 0, ass.text)
@@ -135,6 +164,14 @@ function menu_get_prefix(pos)
         return opts.prefix_norm_sel
     else
         return opts.prefix_norm
+    end
+end
+
+function menu_get_indent_marker(pos)
+    if data[url].formats[pos].is_unfolded then
+        return opts.prefix_indent
+    else
+        return ""
     end
 end
 
@@ -170,6 +207,35 @@ function menu_cursor_move(i)
         end
     end
     menu_draw()
+end
+
+function menu_unfold()
+    local cursor_fmt = data[url].formats[data[url].cursor_pos]
+    formats_fold(cursor_fmt.width, cursor_fmt.height)
+    menu_draw()
+end
+
+function menu_fold()
+    data[url].cursor_pos = get_unfolded_pos()
+    formats_fold()
+    menu_draw()
+end
+
+function get_unfolded_pos()
+    local cursor_res = ""
+    local function getres(fmt)
+        return (fmt.width or "null").."x"..(fmt.height or "null")
+    end
+    for i = #data[url].formats, 1, -1 do
+        local fmt = data[url].formats[i]
+        if i == data[url].cursor_pos then
+            cursor_res = getres(fmt)
+        end
+        if cursor_res ~= "" and getres(fmt) ~= cursor_res then
+            return i + 1
+        end
+    end
+    return 1
 end
 
 function menu_select()
@@ -220,8 +286,12 @@ function build_format_label(fmt)
         codec = codec:gsub("avc1", "h264"):gsub("h265", "hevc")
     end
     return strfmt_label(
-        res, fmt.fps or "", codec or "", br and numshorten(br * 10^3) or "",
-        fmt.asr and numshorten(fmt.asr) or "", fmt.protocol or ""
+        res,
+        fmt.fps and numshorten(fmt.fps) or "",
+        codec or "",
+        br and numshorten(br * 10^3) or "",
+        fmt.asr and numshorten(fmt.asr) or "",
+        fmt.protocol or ""
     )
 end
 
@@ -243,11 +313,20 @@ function format_sort_fn(a, b)
     b.res = (b.width or 1) * (b.height or 1)
     if     a.res > b.res then return true
     elseif a.res < b.res then return false end
-    for _, p in ipairs(params) do
-        local x = isnum(x) and x or get_param_precedence(p, a[p])
-        local y = isnum(y) and y or get_param_precedence(p, b[p])
-        if     x > y then return true
-        elseif x < y then return false end
+    for _, v in ipairs{1, 2} do
+        for _, p in ipairs(params) do
+            local do_sigcmp =
+                v == 1 and isnum(a[p]) and isnum(b[p]) and true or false
+            local x = isnum(a[p]) and a[p] or get_param_precedence(p, a[p])
+            local y = isnum(b[p]) and b[p] or get_param_precedence(p, b[p])
+            if do_sigcmp then
+                if     sigcmp(x, ">", y) then return true
+                elseif sigcmp(x, "<", y) then return false end
+            else
+                if     x > y then return true
+                elseif x < y then return false end
+            end
+        end
     end
     return a.format_id > b.format_id
 end
@@ -331,14 +410,21 @@ function sanitize_format(fmt)
     return fmt
 end
 
+-- build and return the command that needs to run in order to fetch the formats
 function get_ytdl_cmdline()
-    local args = { ytdl_path, "--no-playlist", "-j",
-        table.unpack(get_ytdl_format_args()) }
+    local args = { ytdl_path, "--no-playlist", "-j" }
+    for _, format_arg in ipairs(get_ytdl_format_args()) do
+        table.insert(args, format_arg)
+    end
     table.insert(args, "--")
     table.insert(args, (url:gsub("^ytdl://", "")))
     return args
 end
 
+-- get youtube-dl's format related options that are specified in mpv's
+-- command line options or config file. if we call the youtube-dl command
+-- with these options included, the initially loaded format will be apparent
+-- in the "format_id" parameter of the infojson.
 function get_ytdl_format_args()
     local args = {}
     local fmtopt = mp.get_property("ytdl-format")
@@ -390,10 +476,24 @@ end
 
 -- shorten and format the given number (eg. 4560 -> 4K)
 function numshorten(n)
+    n = math.floor(n + 0.5) -- round the number
     if     n >= 10^9 then return string.format("%dG", n / 10^9)
     elseif n >= 10^6 then return string.format("%dM", n / 10^6)
     elseif n >= 10^3 then return string.format("%dK", n / 10^3)
     else                  return string.format("%d" , n) end
+end
+
+-- compare the given numbers, but only succeed if the larger
+-- number is significantly (15%) larger than the smaller one.
+function sigcmp(a, operator, b)
+    local fraction = 0.15
+    if operator == ">" and a > b + (a * fraction) then
+        return true
+    elseif operator == "<" and a + (b * fraction) < b then
+        return true
+    else
+        return false
+    end
 end
 
 -- test wether the given path or URL is a network stream.
@@ -520,3 +620,5 @@ end
 mp.register_event("start-file", formats_fetch)
 mp.register_event("end-file", menu_hide)
 mp.add_key_binding(nil, "menu", menu_toggle)
+
+-- vim:expandtab
