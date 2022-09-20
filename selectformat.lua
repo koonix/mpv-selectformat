@@ -1,6 +1,7 @@
 -- author: Ehsan Ghorbannezhad <ehsan@disroot.org>
 -- select the video's youtube-dl format via a menu.
 
+-- TODO: fold audio-only formats too
 -- TODO: fix all the (width or "sth").. stuff
 -- TODO: make cursor pos be bound to a format_id, not menu position
 -- TODO: if fold contains only one format, do not unfold
