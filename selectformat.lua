@@ -7,6 +7,10 @@
 -- TODO: if fold contains only one format, do not unfold
 -- TODO: refactor everything
 
+-- ===============
+-- = Global Vars
+-- ===============
+
 local msg     = require "mp.msg"
 local utils   = require "mp.utils"
 local options = require "mp.options"
@@ -41,6 +45,10 @@ local data = {}
 local url = ""
 local ytdl_path = ""
 local is_menu_shown = false
+
+-- ===============
+-- = Functions
+-- ===============
 
 -- fetch the formats using youtube-dl asyncronously and hand them to formats_save()
 function formats_fetch()
