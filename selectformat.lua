@@ -5,6 +5,7 @@
 -- TODO: fix all the (width or "sth").. stuff
 -- TODO: make cursor pos be bound to a format_id, not menu position
 -- TODO: if fold contains only one format, do not unfold
+--       (why do this tho? it creates an special case and is confusing and inconsistend)
 -- TODO: refactor everything
 
 -- ===============
@@ -65,7 +66,7 @@ function formats_fetch()
     execasync(function(a, b, c) formats_save(url, a, b, c) end, get_ytdl_cmdline())
 end
 
--- process the formats fetched by fetch_formats()
+-- process the formats fetched by formats_fetch()
 function formats_save(url, success, result, error)
     data[url] = nil
     if (not success) or result.status ~= 0 then return end
@@ -74,7 +75,7 @@ function formats_save(url, success, result, error)
     data[url] = {formats = {}}
     data[url].initial_format_id = json.format_id
     for _, fmt in ipairs(json.formats) do
-        if is_format_valid(fmt) then
+        if is_format_useful(fmt) then
             fmt = sanitize_format(fmt)
             fmt.label = build_format_label(fmt)
             fmt.ytdl_format = build_ytdl_format_str(fmt)
@@ -266,9 +267,9 @@ function is_fetch_in_progress()
 end
 
 function no_formats_available()
-    return not istable(data[url]) or
-           not istable(data[url].formats) or
-           #data[url].formats == 0
+    return not istable(data[url])
+        or not istable(data[url].formats)
+        or #data[url].formats == 0
 end
 
 -- build the youtube-dl format option for the given format
@@ -328,7 +329,7 @@ function format_sort_fn(a, b)
     b.res = (b.width or 1) * (b.height or 1)
     if     a.res > b.res then return true
     elseif a.res < b.res then return false end
-    for _, v in ipairs{1, 2} do
+    for _, v in ipairs({1, 2}) do
         for _, p in ipairs(params) do
             local do_sigcmp =
                 v == 1 and isnum(a[p]) and isnum(b[p]) and true or false
@@ -381,7 +382,7 @@ function get_param_precedence(param, value)
 end
 
 -- test wether the given format contains the bare minimum of information
-function is_format_valid(fmt)
+function is_format_useful(fmt)
     if (not istable(fmt)) or fmt.ext == "mhtml" or fmt.protocol == "mhtml" then
         return false
     end
@@ -405,7 +406,7 @@ function sanitize_format(fmt)
         "format_id", "dynamic_range", "vcodec", "acodec", "protocol"
     }
     for _, p in ipairs(numeric_params) do
-        if pempty(fmt[p]) then
+        if is_param_empty(fmt[p]) then
             fmt[p] = nil
         elseif isstr(fmt[p]) then
             fmt[p] = tonumber(fmt[p])
@@ -414,7 +415,7 @@ function sanitize_format(fmt)
         end
     end
     for _, p in ipairs(string_params) do
-        if pempty(fmt[p]) then
+        if is_param_empty(fmt[p]) then
             fmt[p] = nil
         elseif isnum(fmt[p]) then
             fmt[p] = tostring(fmt[p])
@@ -445,9 +446,9 @@ function get_ytdl_format_args()
     local fmtopt = mp.get_property("ytdl-format")
     local rawopts = mp.get_property_native("ytdl-raw-options")
     if isempty(fmtopt) then
-        fmtopt = is_loaded_file_audioonly() and
-            "bestaudio/best" or
-            "bestvideo+bestaudio/best"
+        fmtopt = is_loaded_file_audioonly()
+            and "bestaudio/best"
+            or  "bestvideo+bestaudio/best"
     end
     if fmtopt ~= "ytdl" then
         table.insert(args, "--format")
@@ -470,11 +471,11 @@ function is_loaded_file_audioonly()
 end
 
 function is_param_valid(p)
-    return isnum(p) or (isstr(p) and (not pempty(p)))
+    return isnum(p) or (isstr(p) and (not is_param_empty(p)))
 end
 
 -- test wether the given format parameter is empty
-function pempty(p)
+function is_param_empty(p)
     return isempty(p) or p == "none" or p == "null"
 end
 
@@ -577,7 +578,7 @@ function find_executable_path(name)
     local cname = mp.find_config_file(name..suffix)
     if cname then
         return cname
-    elseif exec{ name, "--version" }.error_string ~= "init" then
+    elseif exec({name, "--version"}).error_string ~= "init" then
         return name
     end
     return nil
@@ -603,8 +604,8 @@ function execasync(fn, args)
 end
 
 function exec(args)
-    return mp.command_native{name = "subprocess", args = args,
-        capture_stdout = true, capture_stderr = true}
+    return mp.command_native({name = "subprocess", args = args,
+        capture_stdout = true, capture_stderr = true})
 end
 
 function is_os_windows()
