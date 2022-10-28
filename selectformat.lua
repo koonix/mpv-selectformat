@@ -50,6 +50,12 @@ local is_menu_shown = false
 -- = Functions
 -- ===============
 
+function main()
+    mp.register_event("start-file", formats_fetch)
+    mp.register_event("end-file", menu_hide)
+    mp.add_key_binding(nil, "menu", menu_toggle)
+end
+
 -- fetch the formats using youtube-dl asyncronously and hand them to formats_save()
 function formats_fetch()
     if not update_url() then return end
@@ -626,8 +632,6 @@ if not table.unpack then
     table.unpack = unpack
 end
 
-mp.register_event("start-file", formats_fetch)
-mp.register_event("end-file", menu_hide)
-mp.add_key_binding(nil, "menu", menu_toggle)
+main()
 
 -- vim:expandtab
