@@ -30,16 +30,16 @@ local opts = {
 options.read_options(opts)
 
 local keys = {
-    { {"UP",    "k"},      "up",     function() menu_cursor_move(-1) end, {repeatable=true} },
-    { {"DOWN",  "j"},      "down",   function() menu_cursor_move( 1) end, {repeatable=true} },
-    { {"PGUP",  "ctrl+u"}, "pgup",   function() menu_cursor_move(-5) end, {repeatable=true} },
-    { {"PGDWN", "ctrl+d"}, "pgdwn",  function() menu_cursor_move( 5) end, {repeatable=true} },
-    { {"HOME",  "g"},      "top",    function() menu_cursor_move("top")    end },
-    { {"END",   "G"},      "bottom", function() menu_cursor_move("bottom") end },
-    { {"RIGHT", "l"},      "unfold", function() menu_unfold() end },
-    { {"LEFT",  "h"},      "fold",   function() menu_fold()   end },
-    { {"ESC",   "q"},      "quit",   function() menu_hide()   end },
-    { {"ENTER"},           "select", function() menu_select() end },
+    { { "UP",    "k" },      "up",     function() menu_cursor_move(-1) end, { repeatable=true } },
+    { { "DOWN",  "j" },      "down",   function() menu_cursor_move( 1) end, { repeatable=true } },
+    { { "PGUP",  "ctrl+u" }, "pgup",   function() menu_cursor_move(-5) end, { repeatable=true } },
+    { { "PGDWN", "ctrl+d" }, "pgdwn",  function() menu_cursor_move( 5) end, { repeatable=true } },
+    { { "HOME",  "g" },      "top",    function() menu_cursor_move("top")    end },
+    { { "END",   "G" },      "bottom", function() menu_cursor_move("bottom") end },
+    { { "RIGHT", "l" },      "unfold", function() menu_unfold() end },
+    { { "LEFT",  "h" },      "fold",   function() menu_fold()   end },
+    { { "ESC",   "q" },      "quit",   function() menu_hide()   end },
+    { { "ENTER" },           "select", function() menu_select() end },
 }
 
 local data = {}
@@ -72,7 +72,7 @@ function formats_save(url, success, result, error)
     if (not success) or result.status ~= 0 then return end
     local json = utils.parse_json(result.stdout)
     if (not istable(json)) or (not istable(json.formats)) then return end
-    data[url] = {formats = {}}
+    data[url] = { formats = {} }
     data[url].initial_format_id = json.format_id
     for _, fmt in ipairs(json.formats) do
         if is_format_useful(fmt) then
@@ -351,18 +351,21 @@ end
 function get_param_precedence(param, value)
     local order = {
         dynamic_range = {
-            {"sdr"}, {"^$"}, {"hlg"}, {"h?d?r?10$"}, {"h?d?r?10%+"},
-            {"h?d?r?12"}, {"dv"} },
+            "sdr", "^$", "hlg", "h?d?r?10$", "h?d?r?10%+", "h?d?r?12", "dv"
+        },
         vcodec = {
-            {"theora"}, {"mp4v", "h263"}, {"vp0?8"}, {"[hx]264", "avc"},
-            {"[hx]265", "he?vc"}, {"vp0?9$"}, {"vp0?9%.2"}, {"av0?1"}, },
+            "theora", { "mp4v", "h263" }, "vp0?8", { "[hx]264", "avc" },
+            { "[hx]265", "he?vc" }, "vp0?9$", "vp0?9%.2", "av0?1",
+        },
         acodec = {
-            {"dts"}, {"^ac%-?3"}, {"e%-?a?c%-?3"}, {"mp3"}, {"mp?4a?"}, {"avc"},
-            {"vorbis", "ogg"}, {"opus"} },
+            "dts", "^ac%-?3", "e%-?a?c%-?3", "mp3", "mp?4a?", "avc",
+            { "vorbis", "ogg" }, "opus"
+        },
         protocol = {
-            {"f4"}, {"ws", "websocket$"}, {"mms", "rtsp"}, {"^$"}, {"rtmpe?"},
-            {"websocket_frag"}, {".*dash"}, {"m3u8.*"}, {"http$", "ftp$"},
-            {"https", "ftps"}, },
+            "f4", { "ws", "websocket$" }, { "mms", "rtsp" }, "^$", "rtmpe?",
+            "websocket_frag", ".*dash", "m3u8.*", { "http$", "ftp$" },
+            { "https", "ftps" },
+        },
     }
     if isempty(order[param]) then
         return tonumber(value) or 0
@@ -371,6 +374,7 @@ function get_param_precedence(param, value)
     end
     local n = 1
     for _, patternlist in ipairs(order[param]) do
+        patternlist = type(patternlist) == "table" and patternlist or { patternlist }
         for _, pattern in ipairs(patternlist) do
             if value:lower():find(pattern) then
                 return n
@@ -520,7 +524,8 @@ function is_network_stream(path)
     for _, p in ipairs{
         "http", "https", "ytdl", "rtmp", "rtmps", "rtmpe", "rtmpt", "rtmpts",
         "rtmpte", "rtsp", "rtsps", "mms", "mmst", "mmsh", "mmshttp", "rtp",
-        "srt", "srtp", "gopher", "gophers", "data", "ftp", "ftps", "sftp"} do
+        "srt", "srtp", "gopher", "gophers", "data", "ftp", "ftps", "sftp" }
+    do
         if proto == p then return true end
     end
     return false
@@ -559,7 +564,7 @@ function update_ytdl_path()
         return true
     end
     local paths = {}
-    paths = get_ytdl_hook_opt_paths() or {"yt-dlp", "yt-dlp_x86", "youtube-dl"}
+    paths = get_ytdl_hook_opt_paths() or { "yt-dlp", "yt-dlp_x86", "youtube-dl" }
     for _, p in pairs(paths) do
         p = find_executable_path(p)
         if p then
@@ -599,13 +604,14 @@ end
 
 -- asynchronously execute shell commands using mpv's subprocess command
 function execasync(fn, args)
-    mp.command_native_async({name = "subprocess", args = args,
-        capture_stdout = true, capture_stderr = true}, fn)
+    mp.command_native_async({ name = "subprocess", args = args,
+        capture_stdout = true, capture_stderr = true }, fn)
 end
 
+-- execute shell commands using mpv's subprocess command
 function exec(args)
-    return mp.command_native({name = "subprocess", args = args,
-        capture_stdout = true, capture_stderr = true})
+    return mp.command_native{ name = "subprocess", args = args,
+        capture_stdout = true, capture_stderr = true }
 end
 
 function is_os_windows()
