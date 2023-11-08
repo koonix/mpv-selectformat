@@ -482,6 +482,7 @@ function sanitize_format(fmt)
             fmt[p] = nil
         end
     end
+    fmt.vcodec = fmt.vcodec and fmt.vcodec:gsub("%..*", "") or nil
     return fmt
 end
 
