@@ -333,7 +333,7 @@ function build_ytdl_format_str(fmt)
         return string.format("%s/bestaudio", fmt.format_id)
     else
         local audiofmt = "bestaudio"
-        maxpx = math.max(tonumber(fmt.width or "1"), tonumber(fmt.height or "1"))
+        maxpx = math.max(tonumber(fmt.width) or 1, tonumber(fmt.height) or 1)
         if maxpx < 1000 then audiofmt = "bestaudio[abr<=70]" end
         return string.format("%s+%s/%s+bestaudio/%s/best",
             fmt.format_id, audiofmt, fmt.format_id, fmt.format_id)
