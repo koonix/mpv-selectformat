@@ -48,6 +48,61 @@ local ytdl_path = ""
 local is_menu_shown = false
 
 -- ===============
+-- = Declarations
+-- ===============
+
+local main
+local formats_fetch
+local formats_save
+local formats_fold
+local menu_toggle
+local menu_show
+local menu_init_vars
+local menu_init_cursor_pos
+local menu_hide
+local menu_draw
+local menu_get_prefix
+local menu_get_indent_marker
+local menu_keys_bind
+local menu_keys_unbind
+local menu_cursor_move
+local menu_unfold
+local menu_fold
+local get_unfolded_pos
+local menu_select
+local is_fetch_in_progress
+local no_formats_available
+local build_ytdl_format_str
+local build_format_label
+local get_menu_header
+local strfmt_label
+local format_sort_fn
+local get_param_precedence
+local is_format_useful
+local sanitize_format
+local get_ytdl_cmdline
+local get_ytdl_format_args
+local is_format_audioonly
+local is_loaded_file_audioonly
+local is_param_valid
+local is_param_empty
+local update_url
+local numshorten
+local sigcmp
+local is_network_stream
+local reload_resume
+local update_ytdl_path
+local find_executable_path
+local get_ytdl_hook_opt_paths
+local execasync
+local exec
+local is_os_windows
+local isempty
+local isnum
+local isstr
+local istable
+
+-- ===============
 -- = Functions
 -- ===============
 
