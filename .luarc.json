@@ -1,0 +1,6 @@
+{
+    "workspace.checkThirdParty": "Disable",
+    "diagnostics.globals": [
+        "mp"
+    ]
+}
