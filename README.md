@@ -4,8 +4,8 @@
 * [Features](#features)
 * [Default Keys](#default-keys)
 
-selectformat is an mpv script that allows you to select the
-youtube-dl format of the video on the fly.
+selectformat is an mpv script
+for selecting the youtube-dl format of internet videos on the fly.
 
 Based on the unmaintained
 [mpv-youtube-quality](https://github.com/jgreco/mpv-youtube-quality).
