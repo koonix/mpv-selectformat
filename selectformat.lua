@@ -74,14 +74,15 @@ local istable
 
 local opts = {
 	prioritize_proto = true,
+	prefix_header    = "  ", -- a non-breaking space followed by a space
+	prefix_norm      = "  ", -- a non-breaking space followed by a space
 	prefix_cursor    = "● ",
 	prefix_norm_sel  = "○ ",
-	prefix_norm      = ". ",
-	prefix_header    = "- ",
 	prefix_indent    = "  ",
-	menu_padding_x   = 5,
-	menu_padding_y   = 5,
-	ass_style = "{\\fnmonospace\\fs8}",
+	header_separator = "─",
+	menu_pos_x       = 7,
+	menu_pos_y       = 7,
+	ass_style = "{\\fnmonospace\\fs7}",
 }
 options.read_options(opts)
 
@@ -224,9 +225,11 @@ end
 
 function menu_draw()
 	local ass = assdraw.ass_new()
+	local header = get_menu_header()
+	local header_separator = (opts.prefix_header..header):gsub(".", opts.header_separator)
 	ass:pos(opts.menu_padding_x, opts.menu_padding_y)
 	ass:append(opts.ass_style)
-	ass:append(opts.prefix_header..get_menu_header().."\\N")
+	ass:append(opts.prefix_header..header.."\\N"..header_separator.."\\N")
 	for idx, fmt in ipairs(data[url].formats) do
 		ass:append(menu_get_prefix(idx))
 		ass:append(menu_get_indent_marker(idx))
