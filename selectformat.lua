@@ -559,7 +559,9 @@ end
 
 -- test wether the given format only contains an audio stream
 function is_format_audioonly(fmt)
-	return is_param_valid(fmt.acodec) and (not is_param_valid(fmt.vcodec))
+	return
+		   (is_param_valid(fmt.acodec)    and (not is_param_valid(fmt.vcodec)))
+		or (is_param_valid(fmt.audio_ext) and (not is_param_valid(fmt.video_ext)))
 end
 
 function is_loaded_file_audioonly()
