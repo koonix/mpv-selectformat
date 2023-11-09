@@ -1,12 +1,8 @@
 -- author: koonix <me@koonix.org>
 -- select the video's youtube-dl format via a menu.
 
--- TODO: fold audio-only formats too
 -- TODO: fix all the (width or "sth").. stuff
 -- TODO: make cursor pos be bound to a format_id, not menu position
--- TODO: if fold contains only one format, do not unfold
---       (why do this tho? it creates an special case and is confusing and inconsistend)
--- TODO: refactor everything
 
 -- ====================
 -- = requires
@@ -147,17 +143,22 @@ function formats_save(url, success, result, error)
 	formats_fold()
 end
 
-function formats_fold(width, height)
+function formats_fold(width, height, audioonly)
 	data[url].formats = {}
-	local enummed_res = {}
+	local inserted_res = {}
 	local unfold_res = (width or "null").."x"..(height or "null")
 	for _, fmt in ipairs(data[url].formats_unfolded) do
 		local res = (fmt.width or "").."x"..(fmt.height or "")
-		if res == "x" then res = fmt.format_id end
+		if res == "x" then
+			res = is_format_audioonly(fmt) and "audio-only" or fmt.format_id
+		end
 		fmt.is_unfolded = false
-		if not enummed_res[res] or res == unfold_res then
-			enummed_res[res] = true
-			if res == unfold_res then fmt.is_unfolded = true end
+		local fmt_audioonly = is_format_audioonly(fmt)
+		if not inserted_res[res] or res == unfold_res or ( audioonly and res == "audio-only" ) then
+			inserted_res[res] = true
+			if res == unfold_res or ( audioonly and res == "audio-only" ) then
+				fmt.is_unfolded = true
+			end
 			table.insert(data[url].formats, fmt)
 		end
 	end
@@ -286,7 +287,7 @@ end
 
 function menu_unfold()
 	local cursor_fmt = data[url].formats[data[url].cursor_pos]
-	formats_fold(cursor_fmt.width, cursor_fmt.height)
+	formats_fold(cursor_fmt.width, cursor_fmt.height, is_format_audioonly(cursor_fmt))
 	menu_draw()
 end
 
