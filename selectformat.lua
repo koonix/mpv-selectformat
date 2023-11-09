@@ -241,7 +241,7 @@ function menu_draw()
 	local ass = assdraw.ass_new()
 	local header = get_menu_header()
 	local header_separator = (opts.prefix_header..header):gsub(".", opts.header_separator)
-	ass:pos(opts.menu_padding_x, opts.menu_padding_y)
+	ass:pos(opts.menu_pos_x, opts.menu_pos_y)
 	ass:append(opts.ass_style)
 	ass:append(opts.prefix_header..header.."\\N"..header_separator.."\\N")
 	for idx, fmt in ipairs(data[url].formats) do
