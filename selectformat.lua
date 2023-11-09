@@ -1,4 +1,4 @@
--- author: Ehsan Ghorbannezhad <ehsan@disroot.org>
+-- author: koonix <me@koonix.org>
 -- select the video's youtube-dl format via a menu.
 
 -- TODO: fold audio-only formats too
