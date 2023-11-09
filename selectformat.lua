@@ -73,6 +73,7 @@ local istable
 -- ====================
 
 local opts = {
+	prioritize_proto = true,
 	prefix_cursor    = "● ",
 	prefix_norm_sel  = "○ ",
 	prefix_norm      = ". ",
@@ -447,10 +448,18 @@ end
 
 -- function for sorting the formats table
 function format_sort_fn(a, b)
-	local params = {
-		"fps", "dynamic_range", "vcodec",
-		"acodec", "tbr", "vbr", "abr", "asr", "protocol"
-	}
+	local params
+	if opts.prioritize_proto then
+		params = {
+			"fps", "dynamic_range", "vcodec", "acodec",
+			"protocol", "tbr", "vbr", "abr", "asr",
+		}
+	else
+		params = {
+			"fps", "dynamic_range", "vcodec", "acodec",
+			"tbr", "vbr", "abr", "asr", "protocol",
+		}
+	end
 	a.res = (a.width or 1) * (a.height or 1)
 	b.res = (b.width or 1) * (b.height or 1)
 	if     a.res > b.res then return true
