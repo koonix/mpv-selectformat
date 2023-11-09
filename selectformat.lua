@@ -1,5 +1,7 @@
 -- author: koonix <me@koonix.org>
 
+local script_name = 'selectformat'
+
 -- ====================
 -- = requires
 -- ====================
@@ -84,7 +86,7 @@ local opts = {
 	menu_pos_y       = 7,
 	ass_style = "{\\fnmonospace\\fs7}",
 }
-options.read_options(opts)
+options.read_options(opts, script_name)
 
 local keys = {
 	{ { "UP",    "k" },      "up",     function() menu_cursor_move(-1) end, { repeatable=true } },
