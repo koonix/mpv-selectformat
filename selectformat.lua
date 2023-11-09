@@ -75,7 +75,7 @@ local isstr
 local istable
 
 -- ====================
--- = vars
+-- = options
 -- ====================
 
 local opts = {
@@ -92,6 +92,10 @@ local opts = {
 }
 options.read_options(opts, script_name)
 
+-- ====================
+-- = keys
+-- ====================
+
 local keys = {
 	{ { "UP",    "k" },      "up",     function() menu_cursor_move(-1) end, { repeatable=true } },
 	{ { "DOWN",  "j" },      "down",   function() menu_cursor_move( 1) end, { repeatable=true } },
@@ -104,6 +108,10 @@ local keys = {
 	{ { "ESC",   "q" },      "quit",   function() menu_hide()   end },
 	{ { "ENTER" },           "select", function() menu_select() end },
 }
+
+-- ====================
+-- = globals
+-- ====================
 
 local data = {}
 local url = ""
