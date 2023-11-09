@@ -1,5 +1,9 @@
 # mpv-selectformat
 
+* [Installation](#installation)
+* [Features](#features)
+* [Default Keys](#default-keys)
+
 selectformat is an mpv script that allows you to select the
 youtube-dl format of the video on the fly.
 
@@ -10,7 +14,7 @@ Based on the unmaintained
 
 ![Unfolded](sc2.jpg)
 
-## Install
+## Installation
 
 1. Download and copy `selectformat.lua` to your mpv's
 [scripts folder](https://mpv.io/manual/stable/#script-location)
@@ -29,7 +33,7 @@ You could add something like this: `ctrl+f script-binding selectformat/menu`
 - The initially-loaded format is pre-selected in the menu
 - More useful info about the formats are displayed compared to mpv-youtube-quality
 
-## Default keys
+## Default Keys
 
 | Key(s)                 | Function |
 |------------------------|----------|
