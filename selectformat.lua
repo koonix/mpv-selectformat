@@ -1,5 +1,4 @@
 -- author: koonix <me@koonix.org>
--- select the video's youtube-dl format via a menu.
 
 -- ====================
 -- = requires
