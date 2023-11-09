@@ -1,9 +1,6 @@
 -- author: koonix <me@koonix.org>
 -- select the video's youtube-dl format via a menu.
 
--- TODO: fix all the (width or "sth").. stuff
--- TODO: make cursor pos be bound to a format_id, not menu position
-
 -- ====================
 -- = requires
 -- ====================
@@ -34,7 +31,9 @@ local menu_keys_unbind
 local menu_cursor_move
 local menu_unfold
 local menu_fold
-local get_unfolded_pos
+local get_unfolded_cursor_pos
+local get_cursor_pos
+local get_selected_pos
 local menu_select
 local is_fetch_in_progress
 local no_formats_available
@@ -191,9 +190,9 @@ function menu_show()
 end
 
 function menu_init_vars()
-	if data[url].cursor_pos == nil or data[url].selected_pos == nil then
-		data[url].cursor_pos = 1
-		data[url].selected_pos = 0
+	if data[url].cursor_fmt_id == nil or data[url].selected_fmt_id == nil then
+		data[url].cursor_fmt_id = data[url].formats[1].format_id
+		data[url].selected_fmt_id = "UNSELECTED"
 		menu_init_cursor_pos()
 	end
 end
@@ -202,12 +201,14 @@ end
 -- see the comments of the get_ytdl_format_args() function for more info.
 function menu_init_cursor_pos()
 	local id = data[url].initial_format_id
-	if isempty(id) or not isstr(id) then return end
+	if isempty(id) or not isstr(id) then
+		return
+	end
 	id = id:match("^(.*)%+") or id
 	for idx, fmt in ipairs(data[url].formats) do
 		if fmt.format_id == id then
-			data[url].cursor_pos = idx
-			data[url].selected_pos = idx
+			data[url].cursor_fmt_id = fmt.format_id
+			data[url].selected_fmt_id = fmt.format_id
 		end
 	end
 end
@@ -234,9 +235,9 @@ function menu_draw()
 end
 
 function menu_get_prefix(pos)
-	if pos == data[url].cursor_pos then
+	if pos == get_cursor_pos() then
 		return opts.prefix_cursor
-	elseif pos == data[url].selected_pos then
+	elseif pos == get_selected_pos() then
 		return opts.prefix_norm_sel
 	else
 		return opts.prefix_norm
@@ -271,54 +272,82 @@ end
 
 function menu_cursor_move(i)
 	if i == "top" then
-		data[url].cursor_pos = 1
+		data[url].cursor_fmt_id = data[url].formats[1].format_id
 	elseif i == "bottom" then
-		data[url].cursor_pos = #data[url].formats
+		data[url].cursor_fmt_id = data[url].formats[#data[url].formats].format_id
 	else
-		data[url].cursor_pos = data[url].cursor_pos + i
-		if data[url].cursor_pos < 1 then
-			data[url].cursor_pos = 1
-		elseif data[url].cursor_pos > #data[url].formats then
-			data[url].cursor_pos = #data[url].formats
+		local pos = get_cursor_pos() + i
+		if pos < 1 then
+			pos = 1
+		elseif pos > #data[url].formats then
+			pos = #data[url].formats
 		end
+		data[url].cursor_fmt_id = data[url].formats[pos].format_id
 	end
 	menu_draw()
 end
 
 function menu_unfold()
-	local cursor_fmt = data[url].formats[data[url].cursor_pos]
+	local cursor_fmt = data[url].formats[get_cursor_pos()]
 	formats_fold(cursor_fmt.width, cursor_fmt.height, is_format_audioonly(cursor_fmt))
 	menu_draw()
 end
 
 function menu_fold()
-	data[url].cursor_pos = get_unfolded_pos()
+	data[url].cursor_fmt_id = get_unfolded_cursor_pos()
 	formats_fold()
 	menu_draw()
 end
 
-function get_unfolded_pos()
-	local cursor_res = ""
+function get_unfolded_cursor_pos()
 	local function getres(fmt)
-		return (fmt.width or "null").."x"..(fmt.height or "null")
-	end
-	for i = #data[url].formats, 1, -1 do
-		local fmt = data[url].formats[i]
-		if i == data[url].cursor_pos then
-			cursor_res = getres(fmt)
-		end
-		if cursor_res ~= "" and getres(fmt) ~= cursor_res then
-			return i + 1
+		if is_format_audioonly(fmt) then
+			return "audio-only"
+		else
+			return (fmt.width or "null").."x"..(fmt.height or "null")
 		end
 	end
-	return 1
+	local cursor_fmt = data[url].formats[get_cursor_pos()]
+	if cursor_fmt.is_unfolded then
+		local cursor_res = ""
+		for i = #data[url].formats, 1, -1 do
+			local fmt = data[url].formats[i]
+			if cursor_fmt.format_id == fmt.format_id then
+				cursor_res = getres(fmt)
+			end
+			if cursor_res ~= "" and getres(fmt) ~= cursor_res then
+				return data[url].formats[i + 1].format_id
+			end
+			if i == 1 then
+				return fmt.format_id
+			end
+		end
+	end
+	return data[url].cursor_fmt_id
+end
+
+function get_cursor_pos()
+	for idx, fmt in ipairs(data[url].formats) do
+		if data[url].cursor_fmt_id == fmt.format_id then
+			return idx
+		end
+	end
+	return 0
+end
+
+function get_selected_pos()
+	for idx, fmt in ipairs(data[url].formats) do
+		if data[url].selected_fmt_id == fmt.format_id then
+			return idx
+		end
+	end
+	return 0
 end
 
 function menu_select()
 	menu_hide()
-	local sel = data[url].cursor_pos
-	data[url].selected_pos = sel
-	mp.set_property("ytdl-format", data[url].formats[sel].ytdl_format)
+	data[url].selected_fmt_id = data[url].cursor_fmt_id
+	mp.set_property("ytdl-format", data[url].formats[get_selected_pos()].ytdl_format)
 	reload_resume()
 end
 
