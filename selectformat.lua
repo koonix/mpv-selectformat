@@ -21,7 +21,7 @@ local formats_fold
 local menu_toggle
 local menu_show
 local menu_init_vars
-local menu_init_cursor_pos
+local menu_init_sel_pos
 local menu_hide
 local menu_draw
 local menu_get_prefix
@@ -34,6 +34,8 @@ local menu_fold
 local get_unfolded_cursor_fmt_id
 local get_cursor_pos
 local get_selected_pos
+local get_parent_of_selected_pos
+local get_format_id_pos
 local menu_select
 local is_fetch_in_progress
 local no_formats_available
@@ -193,21 +195,20 @@ function menu_init_vars()
 	if data[url].cursor_fmt_id == nil or data[url].selected_fmt_id == nil then
 		data[url].cursor_fmt_id = data[url].formats[1].format_id
 		data[url].selected_fmt_id = "UNSELECTED"
-		menu_init_cursor_pos()
+		menu_init_sel_pos()
 	end
 end
 
 -- put the cursor on the initially loaded format.
 -- see the comments of the get_ytdl_format_args() function for more info.
-function menu_init_cursor_pos()
+function menu_init_sel_pos()
 	local id = data[url].initial_format_id
 	if isempty(id) or not isstr(id) then
 		return
 	end
 	id = id:match("^(.*)%+") or id
-	for idx, fmt in ipairs(data[url].formats) do
+	for idx, fmt in ipairs(data[url].formats_unfolded) do
 		if fmt.format_id == id then
-			data[url].cursor_fmt_id = fmt.format_id
 			data[url].selected_fmt_id = fmt.format_id
 		end
 	end
@@ -238,6 +239,8 @@ function menu_get_prefix(pos)
 	if pos == get_cursor_pos() then
 		return opts.prefix_cursor
 	elseif pos == get_selected_pos() then
+		return opts.prefix_norm_sel
+	elseif not data[url].formats[pos].is_unfolded and pos == get_parent_of_selected_pos() then
 		return opts.prefix_norm_sel
 	else
 		return opts.prefix_norm
@@ -338,6 +341,39 @@ end
 function get_selected_pos()
 	for idx, fmt in ipairs(data[url].formats) do
 		if data[url].selected_fmt_id == fmt.format_id then
+			return idx
+		end
+	end
+	return 0
+end
+
+function get_parent_of_selected_pos()
+	local function getres(fmt)
+		if is_format_audioonly(fmt) then
+			return "audio-only"
+		else
+			return (fmt.width or "null").."x"..(fmt.height or "null")
+		end
+	end
+	local sel_res = ""
+	for i = #data[url].formats_unfolded, 1, -1 do
+		local ufmt = data[url].formats_unfolded[i]
+		if data[url].selected_fmt_id == ufmt.format_id then
+			sel_res = getres(ufmt)
+		end
+		if sel_res ~= "" and getres(ufmt) ~= sel_res then
+			return get_format_id_pos(data[url].formats_unfolded[i + 1].format_id)
+		end
+		if i == 1 then
+			return 1
+		end
+	end
+	return 0
+end
+
+function get_format_id_pos(id)
+	for idx, fmt in ipairs(data[url].formats) do
+		if id == fmt.format_id then
 			return idx
 		end
 	end
@@ -539,7 +575,7 @@ end
 -- in the "format_id" parameter of the infojson.
 function get_ytdl_format_args()
 	local args = {}
-	local fmtopt = mp.get_property("ytdl-format")
+	local fmtopt  = mp.get_property("ytdl-format")
 	local rawopts = mp.get_property_native("ytdl-raw-options")
 	if isempty(fmtopt) then
 		fmtopt = is_loaded_file_audioonly()
