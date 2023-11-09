@@ -31,7 +31,7 @@ local menu_keys_unbind
 local menu_cursor_move
 local menu_unfold
 local menu_fold
-local get_unfolded_cursor_pos
+local get_unfolded_cursor_fmt_id
 local get_cursor_pos
 local get_selected_pos
 local menu_select
@@ -294,12 +294,12 @@ function menu_unfold()
 end
 
 function menu_fold()
-	data[url].cursor_fmt_id = get_unfolded_cursor_pos()
+	data[url].cursor_fmt_id = get_unfolded_cursor_fmt_id()
 	formats_fold()
 	menu_draw()
 end
 
-function get_unfolded_cursor_pos()
+function get_unfolded_cursor_fmt_id()
 	local function getres(fmt)
 		if is_format_audioonly(fmt) then
 			return "audio-only"
