@@ -104,13 +104,13 @@ local ytdl_path = ""
 local is_menu_shown = false
 
 -- ====================
--- = Functions
+-- = functions
 -- ====================
 
 function main()
-    mp.register_event("start-file", formats_fetch)
-    mp.register_event("end-file", menu_hide)
-    mp.add_key_binding(nil, "menu", menu_toggle)
+	mp.register_event("start-file", formats_fetch)
+	mp.register_event("end-file", menu_hide)
+	mp.add_key_binding(nil, "menu", menu_toggle)
 end
 
 -- fetch the formats using youtube-dl asyncronously and hand them to formats_save()
