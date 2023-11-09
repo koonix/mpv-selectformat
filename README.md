@@ -2,7 +2,9 @@
 
 * [Installation](#installation)
 * [Features](#features)
-* [Default Keys](#default-keys)
+* [Key Bindings](#key-bindings)
+* [Available Options](#available-options)
+* [Setting a Default Format](#setting-a-default-format)
 
 selectformat is an mpv plugin
 for selecting the format of internet videos on the fly.
@@ -17,13 +19,13 @@ Based on the unmaintained
 ## Installation
 
 1. Download and copy `selectformat.lua` to your mpv's
-[scripts folder](https://mpv.io/manual/stable/#script-location)
+[scripts directory](https://mpv.io/manual/stable/#script-location)
 
 2. Add a binding to your mpv's
-[input.conf file](https://mpv.io/manual/stable/#input-conf)
+[input.conf](https://mpv.io/manual/stable/#input-conf) file
 for opening the menu
 (selectformat doesn't add such binding itself).
-You could add something like this: `ctrl+f script-binding selectformat/menu`
+Example: `ctrl+f script-binding selectformat/menu`
 
 ## Features
 
@@ -33,7 +35,9 @@ You could add something like this: `ctrl+f script-binding selectformat/menu`
 - The initially-loaded format is pre-selected in the menu
 - More useful info about the formats are displayed compared to mpv-youtube-quality
 
-## Default Keys
+## Key Bindings
+
+These are the key bindings for navigating the menu.
 
 | Key(s)                 | Function |
 |------------------------|----------|
@@ -47,3 +51,19 @@ You could add something like this: `ctrl+f script-binding selectformat/menu`
 | `Left` or `h`          | Fold the unfolded resolutions
 | `Enter`                | Select the item under the cursor
 | `Esc` or `q`           | Close the menu
+
+## Available Options
+
+Take a look at the `options` section in `selectformat.lua`
+for available options and their default values.
+
+These options can be configured using mpv's
+[script-opts](https://mpv.io/manual/stable/#options-script-opts)
+option.
+
+## Setting a Default Format
+
+You can change the default format that mpv loads
+by configuring mpv's
+[`ytdl-format`](https://mpv.io/manual/stable/#options-ytdl-format)
+option in [mpv.conf](https://mpv.io/manual/stable/#configuration-files).
