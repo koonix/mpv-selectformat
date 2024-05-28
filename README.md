@@ -18,10 +18,10 @@ Based on the unmaintained
 
 ## Installation
 
-1. Download and copy `selectformat.lua` to your mpv's
-[scripts directory](https://mpv.io/manual/stable/#script-location)
+1. [Download](https://github.com/koonix/mpv-selectformat/releases/latest/download/selectformat.lua)
+and copy `selectformat.lua` to your mpv's [scripts directory](https://mpv.io/manual/stable/#script-location).
 
-2. Add a binding to your mpv's
+3. Add a binding to your mpv's
 [input.conf](https://mpv.io/manual/stable/#input-conf) file
 for opening the menu
 (selectformat doesn't add such binding itself).
