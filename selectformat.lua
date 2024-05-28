@@ -180,7 +180,7 @@ local keys = {
 local data = {}
 local url = ""
 local ytdl_path = ""
-local searched_ytld_path = false
+local ytdl_not_found = false
 local is_menu_shown = false
 
 -- ====================
@@ -1011,7 +1011,7 @@ end
 
 -- find the executable path of yt-dlp or youtube-dl and update the ytdl_path variable
 function update_ytdl_path()
-	if not searched_ytld_path then
+	if ytdl_not_found then
 		return false
 	elseif not isempty(ytdl_path) then
 		return true
@@ -1030,7 +1030,7 @@ function update_ytdl_path()
 		end
 	end
 
-	searched_ytld_path = true
+	ytdl_not_found = true
 	msg.warn("couldn't find yt-dlp or youtube-dl")
 
 	return false
