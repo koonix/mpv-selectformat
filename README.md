@@ -2,14 +2,14 @@
 
 * [Installation](#installation)
 * [Features](#features)
-* [Key Bindings](#key-bindings)
+* [Menu Key Bindings](#menu-key-bindings)
 * [Available Options](#available-options)
 * [Setting a Default Format](#setting-a-default-format)
 
-selectformat is an mpv plugin
+An *mpv* plugin
 for selecting the format of internet videos on the fly.
 
-Based on the unmaintained
+Based on
 [mpv-youtube-quality](https://github.com/jgreco/mpv-youtube-quality).
 
 ![Folded](sc1.jpg)
@@ -19,25 +19,26 @@ Based on the unmaintained
 ## Installation
 
 1. [Download](https://github.com/koonix/mpv-selectformat/releases/latest/download/selectformat.lua)
-and copy `selectformat.lua` to your mpv's [scripts directory](https://mpv.io/manual/stable/#script-location).
+`selectformat.lua`
 
-3. Add a binding to your mpv's
+2. Copy `selectformat.lua` to your mpv [scripts directory](https://mpv.io/manual/stable/#script-location).
+
+3. Add a key binding to your mpv
 [input.conf](https://mpv.io/manual/stable/#input-conf) file
-for opening the menu
-(selectformat doesn't add such binding itself).
+to open the menu.
 Example: `ctrl+f script-binding selectformat/menu`
 
 ## Features
 
-- Formats are grouped (folded) based on resolution to reduce clutter
+- Formats are grouped (folded) based on resolution, to reduce clutter.
 - Formats are properly sorted based on codec, protocol, etc.
-- Formats are fetched asynchronously as soon as an internet video starts
-- The initially-loaded format is pre-selected in the menu
-- More useful info about the formats are displayed compared to mpv-youtube-quality
+- Formats are fetched asynchronously as soon as an internet video starts.
+- The initially-loaded format is pre-selected in the menu.
+- More useful information about the formats is displayed compared to mpv-youtube-quality.
 
-## Key Bindings
+## Menu Key Bindings
 
-These are the key bindings for navigating the menu.
+The following key bindings can be used to navigate the menu:
 
 | Key(s)                 | Function |
 |------------------------|----------|
@@ -54,7 +55,7 @@ These are the key bindings for navigating the menu.
 
 ## Available Options
 
-Take a look at the `options` section in `selectformat.lua`
+Refer to the `options` section in `selectformat.lua`
 for available options and their default values.
 
 These options can be configured using mpv's
