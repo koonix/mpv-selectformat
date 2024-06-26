@@ -63,6 +63,7 @@ local numshorten
 local sigcmp
 local is_network_stream
 local reload_resume
+local reload
 local update_ytdl_path
 local find_executable_path
 local get_ytdl_hook_opt_paths
@@ -980,7 +981,7 @@ function is_network_stream(path)
 end
 
 -- this function is a modified version of mpv-reload's reload_resume()
--- https://github.com/4e6/mpv-reload, commit c1219b6
+-- https://github.com/4e6/mpv-reload, commit 1a6a938
 function reload_resume()
 	local pos = mp.get_property("time-pos")
 	local duration = mp.get_property_native("duration")
@@ -993,9 +994,9 @@ function reload_resume()
 	end
 
 	if pos and isnum(duration) and duration >= 0 then
-		mp.commandv("loadfile", url, "replace", "start=+" .. pos)
+		reload(url, pos)
 	else
-		mp.commandv("loadfile", url, "replace")
+		reload(url, nil)
 	end
 
 	for i = 0, plpos - 1 do
@@ -1006,6 +1007,19 @@ function reload_resume()
 
 	for i = plpos + 1, plcount - 1 do
 		mp.commandv("loadfile", playlist[i], "append")
+	end
+end
+
+function reload(path, timepos)
+	if timepos == nil then
+		mp.commandv("loadfile", path, "replace")
+		return
+	end
+	local success =
+		mp.commandv("loadfile", path, "replace", 0, "start=+" .. timepos) -- mpv >= v0.38.0
+	if not success then
+		mp.msg.warn("falling back to old loadfile syntax (mpv <= v0.37.0)")
+		mp.commandv("loadfile", path, "replace", "start=+" .. timepos) -- mpv <= v0.37.0
 	end
 end
 
