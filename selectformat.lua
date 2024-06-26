@@ -983,7 +983,7 @@ end
 -- this function is a modified version of mpv-reload's reload_resume()
 -- https://github.com/4e6/mpv-reload, commit 1a6a938
 function reload_resume()
-	local pos = mp.get_property("time-pos")
+	local timepos = mp.get_property("time-pos")
 	local duration = mp.get_property_native("duration")
 	local plcount = mp.get_property_number("playlist-count")
 	local plpos = mp.get_property_number("playlist-pos")
@@ -993,8 +993,14 @@ function reload_resume()
 		playlist[i] = mp.get_property("playlist/" .. i .. "/filename")
 	end
 
-	if pos and isnum(duration) and duration >= 0 then
-		reload(url, pos)
+	if timepos and isnum(duration) and duration >= 0 then
+		local set_time_pos
+		set_time_pos = function(t)
+			mp.set_property("time-pos", timepos)
+			mp.unregister_event(set_time_pos)
+		end
+		mp.register_event("file-loaded", set_time_pos)
+		reload(url, timepos)
 	else
 		reload(url, nil)
 	end
