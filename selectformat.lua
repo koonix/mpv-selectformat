@@ -1126,11 +1126,6 @@ function istable(var)
 	return type(var) == "table"
 end
 
--- if table.unpack() isn't available, use unpack() instead
-if not table.unpack then
-	table.unpack = unpack
-end
-
 main()
 
 -- vim:noexpandtab
