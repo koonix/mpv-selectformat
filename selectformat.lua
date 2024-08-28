@@ -764,7 +764,7 @@ function get_param_precedence(param, value)
 	return 0
 end
 
--- test wether the given format contains the bare minimum of information
+-- test whether the given format contains the bare minimum of information
 function is_format_useful(fmt)
 	if (not istable(fmt)) or fmt.ext == "mhtml" or fmt.protocol == "mhtml" then
 		return false
@@ -877,7 +877,7 @@ function get_ytdl_format_args()
 	return args
 end
 
--- test wether the given format only contains an audio stream
+-- test whether the given format only contains an audio stream
 function is_format_audioonly(fmt)
 	return (is_param_valid(fmt.acodec) and (not is_param_valid(fmt.vcodec)))
 		or (
@@ -894,7 +894,7 @@ function is_param_valid(p)
 	return isnum(p) or (isstr(p) and (not is_param_empty(p)))
 end
 
--- test wether the given format parameter is empty
+-- test whether the given format parameter is empty
 function is_param_empty(p)
 	return isempty(p) or p == "none" or p == "null"
 end
@@ -937,7 +937,7 @@ function sigcmp(a, operator, b)
 	end
 end
 
--- test wether the given path or URL is a network stream.
+-- test whether the given path or URL is a network stream.
 -- works by checking the given URL's protocol.
 function is_network_stream(path)
 	local proto = path:match("^(%a+)://")
