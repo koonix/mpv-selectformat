@@ -1,7 +1,7 @@
 -- Name: mpv-selectformat
 -- Author: koonix <me@koonix.org>
 -- Upstream: https://github.com/koonix/mpv-selectformat
--- Version: 1.0.2
+-- Version: 1.0.3
 -- License: MIT
 
 local script_name = "selectformat"
