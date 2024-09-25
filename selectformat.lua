@@ -53,7 +53,7 @@ local get_param_precedence
 local is_format_useful
 local sanitize_format
 local get_ytdl_cmdline
-local get_ytdl_format_args
+local get_ytdl_mpvconf_args
 local is_format_audioonly
 local is_loaded_file_audioonly
 local is_param_valid
@@ -319,7 +319,7 @@ function menu_init_vars()
 end
 
 -- put the cursor on the initially loaded format.
--- see the comments of the get_ytdl_format_args() function for more info.
+-- see the comments of the get_ytdl_mpvconf_args() function for more info.
 function menu_init_sel_pos()
 	local id = data[url].initial_format_id
 
@@ -840,7 +840,7 @@ end
 function get_ytdl_cmdline()
 	local args = { ytdl_path, "--no-playlist", "-j" }
 
-	for _, format_arg in ipairs(get_ytdl_format_args()) do
+	for _, format_arg in ipairs(get_ytdl_mpvconf_args()) do
 		table.insert(args, format_arg)
 	end
 
@@ -850,11 +850,11 @@ function get_ytdl_cmdline()
 	return args
 end
 
--- get youtube-dl's format related options that are specified in mpv's
+-- get youtube-dl's options that are specified in mpv's
 -- command line options or config file. if we call the youtube-dl command
 -- with these options included, the initially loaded format will be apparent
 -- in the "format_id" parameter of the infojson.
-function get_ytdl_format_args()
+function get_ytdl_mpvconf_args()
 	local args = {}
 	local fmtopt = mp.get_property("ytdl-format")
 	local rawopts = mp.get_property_native("ytdl-raw-options")
@@ -869,9 +869,13 @@ function get_ytdl_format_args()
 		table.insert(args, fmtopt)
 	end
 
-	if istable(rawopts) and isstr(rawopts["format-sort"]) then
-		table.insert(args, "--format-sort")
-		table.insert(args, rawopts["format-sort"])
+	if istable(rawopts) then
+		for k, v in pairs(rawopts) do
+			table.insert(args, "--" .. k)
+			if not isempty(v) then
+				table.insert(args, v)
+			end
+		end
 	end
 
 	return args
