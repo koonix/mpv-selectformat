@@ -10,10 +10,10 @@ local script_name = "selectformat"
 -- = requires
 -- ====================
 
-local msg = require("mp.msg")
-local utils = require("mp.utils")
-local options = require("mp.options")
-local assdraw = require("mp.assdraw")
+mp.msg = require("mp.msg")
+mp.utils = require("mp.utils")
+mp.options = require("mp.options")
+mp.assdraw = require("mp.assdraw")
 
 -- ====================
 -- = declarations
@@ -91,7 +91,7 @@ local opts = {
 	menu_pos_y = 7,
 	ass_style = "{\\fnmonospace\\fs7}",
 }
-options.read_options(opts, script_name)
+mp.options.read_options(opts, script_name)
 
 -- ====================
 -- = keys
@@ -222,7 +222,7 @@ function formats_save(url, success, result, error)
 		return
 	end
 
-	local json = utils.parse_json(result.stdout)
+	local json = mp.utils.parse_json(result.stdout)
 
 	if (not istable(json)) or (not istable(json.formats)) then
 		return
@@ -345,7 +345,7 @@ function menu_hide()
 end
 
 function menu_draw()
-	local ass = assdraw.ass_new()
+	local ass = mp.assdraw.ass_new()
 	local header = get_menu_header()
 	local header_separator = (opts.prefix_header .. header):gsub(
 		".",
@@ -1051,7 +1051,7 @@ function update_ytdl_path()
 	end
 
 	ytdl_not_found = true
-	msg.warn("couldn't find yt-dlp or youtube-dl")
+	mp.msg.warn("couldn't find yt-dlp or youtube-dl")
 
 	return false
 end
@@ -1077,7 +1077,7 @@ function get_ytdl_hook_opt_paths()
 	local sep = is_os_windows() and ";" or ":"
 	local hook_opts = { ytdl_path = "" }
 
-	options.read_options(hook_opts, "ytdl_hook")
+	mp.options.read_options(hook_opts, "ytdl_hook")
 
 	for p in hook_opts.ytdl_path:gmatch("[^" .. sep .. "]+") do
 		table.insert(paths, p)
