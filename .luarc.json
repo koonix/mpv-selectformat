@@ -1,6 +1,8 @@
 {
-    "workspace.checkThirdParty": "Disable",
-    "diagnostics.globals": [
-        "mp"
-    ]
+	"runtime": {
+		"version": "LuaJIT"
+	},
+	"diagnostics.globals": [
+		"mp"
+	]
 }
