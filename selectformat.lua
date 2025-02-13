@@ -694,7 +694,7 @@ function format_sort_fn(a, b)
 	return a.format_id > b.format_id
 end
 
--- rate the given parameter value based on it's precedence
+-- rate the given parameter value based on its precedence
 function get_param_precedence(param, value)
 	-- orders of precedence.
 	-- each item in any of the categories is a list of lua patterns.
